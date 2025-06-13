@@ -6,6 +6,7 @@ from functools import wraps
 from pymongo import MongoClient
 import random
 import time
+from flask_mail import Mail, Message
 
 app = Flask(__name__)
 app.secret_key = "каЙфМесС_СеКрЕтНыЙ_КлЮч_B_3_4аСа_Н04и"
@@ -17,6 +18,19 @@ db = client['kayfmess']
 users = db['users']
 messages = db['messages']
 energy_logs = db['energy_logs']  # Логи "энергетика"
+
+# Инициализация Flask-Mail
+mail = Mail(app)
+
+# Конфигурация из файла config.py
+if os.environ.get('FLASK_ENV') == 'docker':
+    from config import config
+    app.config.from_object(config['docker'])
+else:
+    from config import config
+    app.config.from_object(config['development'])
+
+mail.init_app(app)
 
 # Смешные сообщения для отображения при загрузке страницы
 FUNNY_LOADING_MESSAGES = [
@@ -55,6 +69,7 @@ def register():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
+        email = request.form.get("email")
         
         existing_user = users.find_one({"username": username})
         
@@ -64,6 +79,7 @@ def register():
             users.insert_one({
                 "username": username,
                 "password": password,
+                "email": email,
                 "energy_level": random.randint(50, 100),
                 "created_at": datetime.now()
             })
@@ -75,6 +91,34 @@ def register():
                 "timestamp": datetime.now(),
                 "note": f"Новый участник вечеринки в 3 часа ночи: {username}"
             })
+            
+            # Отправляем приветственное письмо
+            if email:
+                try:
+                    welcome_msg = Message(
+                        "Добро пожаловать в КайфМесс!",
+                        recipients=[email]
+                    )
+                    welcome_msg.body = f"""
+Привет, {username}!
+
+Добро пожаловать в КайфМесс - мессенджер, созданный в 3 часа ночи под энергетиком!
+
+Твой уровень энергии: {random.randint(50, 100)}%
+
+Продолжай кайфовать!
+Команда КайфМесс
+"""
+                    welcome_msg.html = f"""
+<h2>Привет, {username}!</h2>
+<p>Добро пожаловать в <strong>КайфМесс</strong> - мессенджер, созданный в 3 часа ночи под энергетиком!</p>
+<p>Твой уровень энергии: <span style="color: green;">{random.randint(50, 100)}%</span></p>
+<p>Продолжай кайфовать!</p>
+<p><em>Команда КайфМесс</em></p>
+"""
+                    mail.send(welcome_msg)
+                except Exception as e:
+                    print(f"Ошибка отправки email: {str(e)}")
             
             flash("Партбилет выдан успешно! Энергетик вручен. Теперь войдите в систему.", "success")
             return redirect(url_for("login"))
@@ -178,6 +222,26 @@ def send_message():
         
         messages.insert_one(message)
         
+        # Если это важное сообщение (содержит ключевые слова), отправляем уведомление админу
+        important_keywords = ["срочно", "важно", "критично", "сбой", "ошибка", "падение"]
+        if any(keyword in content.lower() for keyword in important_keywords):
+            try:
+                admin_email = os.environ.get('ADMIN_EMAIL') or 'admin@qndk.fun'
+                urgent_msg = Message(
+                    "Важное сообщение в КайфМесс!",
+                    recipients=[admin_email]
+                )
+                urgent_msg.body = f"""
+Важное сообщение от пользователя {session['username']}:
+
+{content}
+
+Время: {datetime.now().strftime('%d.%m.%Y %H:%M:%S')}
+"""
+                mail.send(urgent_msg)
+            except Exception as e:
+                print(f"Ошибка отправки уведомления админу: {str(e)}")
+        
         # Если у пользователя мало энергии, добавим энергетик
         if session.get("energy_level", 0) < 30:
             users.update_one(
@@ -267,6 +331,42 @@ def energy_boost():
         
     return redirect(url_for("messages_page"))
 
+@app.route("/отправить-тест", methods=["GET"])
+@login_required
+def send_test_email():
+    """Тестовый маршрут для проверки работы Postfix"""
+    # Получаем информацию о пользователе
+    user = users.find_one({"username": session["username"]})
+    
+    if user and "email" in user and user["email"]:
+        try:
+            # Формируем текущее время
+            current_time = datetime.now().strftime("%H:%M")
+            hour = datetime.now().hour
+            time_text = "3 часа ночи" if 1 <= hour <= 5 else f"{hour} часов"
+            
+            # Отправляем тестовое письмо через функцию уведомлений
+            result = send_notification_email(
+                to=user["email"],
+                subject="Тестовое письмо от КайфМесс",
+                template="email/notification",
+                sender=session["username"],
+                message="Это тестовое сообщение для проверки работы Postfix.<br>Если вы его получили, значит всё работает!",
+                timestamp=time_text,
+                urgent=False
+            )
+            
+            if result:
+                flash("Тестовое письмо отправлено успешно! Проверьте свою почту.", "success")
+            else:
+                flash("Произошла ошибка при отправке письма. Возможно, сервер слишком под кайфом!", "danger")
+        except Exception as e:
+            flash(f"Произошла ошибка: {str(e)}", "danger")
+    else:
+        flash("У вас не указан email. Пожалуйста, обновите свой профиль.", "warning")
+    
+    return redirect(url_for("messages_page"))
+
 @app.errorhandler(404)
 def page_not_found(e):
     error_messages = [
@@ -286,6 +386,24 @@ def server_error(e):
         "Перебор с энергетиками! Сервер на перезагрузке!"
     ]
     return render_template("500.html", error_message=random.choice(error_messages)), 500
+
+# Функция для отправки уведомлений по email
+def send_notification_email(to, subject, template, **kwargs):
+    try:
+        msg = Message(subject=subject, recipients=[to])
+        msg.body = render_template(template + '.txt', **kwargs)
+        msg.html = render_template(template + '.html', **kwargs)
+        
+        # Добавляем случайную "фишку" в стиле приложения
+        if random.random() < 0.3:  # 30% шанс на "фишку"
+            msg.body += "\n\nP.S. Это сообщение было отправлено в 3 часа ночи под энергетиком!"
+            msg.html += "<p><em>P.S. Это сообщение было отправлено в 3 часа ночи под энергетиком!</em></p>"
+        
+        mail.send(msg)
+        return True
+    except Exception as e:
+        print(f"Ошибка отправки email: {str(e)}")
+        return False
 
 if __name__ == "__main__":
     app.run(debug=True) 

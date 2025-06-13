@@ -8,10 +8,14 @@ services:
     restart: always
     depends_on:
       - mongodb
+      - postfix
     environment:
       - FLASK_ENV=docker
       - MONGODB_URI=mongodb://mongodb:27017/kayfmess
       - SERVER_NAME=kayfmess.qndk.fun
+      - MAIL_SERVER=postfix
+      - MAIL_PORT=25
+      - MAIL_DEFAULT_SENDER=kayfmess@qndk.fun
     volumes:
       - ./static:/app/static
       - ./logs:/app/logs
@@ -25,6 +29,24 @@ services:
     restart: always
     volumes:
       - mongodb_data:/data/db
+    networks:
+      - kayfmess_network
+
+  # Postfix mail server
+  postfix:
+    image: boky/postfix:latest
+    container_name: kayfmess_postfix
+    restart: always
+    environment:
+      - POSTFIX_myhostname=kayfmess.qndk.fun
+      - POSTFIX_mydomain=qndk.fun
+      - POSTFIX_myorigin=$mydomain
+      - POSTFIX_inet_interfaces=all
+      - POSTFIX_inet_protocols=all
+      - ALLOW_EMPTY_SENDER_DOMAINS=true
+      - RELAYHOST=
+    ports:
+      - "25:25"
     networks:
       - kayfmess_network
 

@@ -150,6 +150,11 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('about') }}"><i class="fas fa-info-circle"></i> О нас</a>
                     </li>
+                    {% if session.username %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('send_test_email') }}"><i class="fas fa-envelope"></i> Тест Postfix</a>
+                    </li>
+                    {% endif %}
                 </ul>
                 <ul class="navbar-nav">
                     {% if session.username %}

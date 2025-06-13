@@ -20,17 +20,22 @@ class Config:
     SSL_REDIRECT = False
     
     # Mail
-    MAIL_SERVER = os.environ.get('MAIL_SERVER')
+    MAIL_SERVER = os.environ.get('MAIL_SERVER') or 'postfix'
     MAIL_PORT = int(os.environ.get('MAIL_PORT') or 25)
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'false').lower() == 'true'
+    MAIL_USE_SSL = os.environ.get('MAIL_USE_SSL', 'false').lower() == 'true'
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or 'kayfmess@qndk.fun'
+    MAIL_MAX_EMAILS = os.environ.get('MAIL_MAX_EMAILS') or 100
+    MAIL_SUPPRESS_SEND = os.environ.get('MAIL_SUPPRESS_SEND', 'false').lower() == 'true'
+    MAIL_ASCII_ATTACHMENTS = os.environ.get('MAIL_ASCII_ATTACHMENTS', 'false').lower() == 'true'
 
 
 class DevelopmentConfig(Config):
     DEBUG = True
     SERVER_NAME = None
+    MAIL_SUPPRESS_SEND = True
 
 
 class TestingConfig(Config):
@@ -38,6 +43,7 @@ class TestingConfig(Config):
     DEBUG = True
     SERVER_NAME = None
     MONGODB_DB = 'kayfmess_test'
+    MAIL_SUPPRESS_SEND = True
 
 
 class ProductionConfig(Config):
@@ -47,6 +53,7 @@ class ProductionConfig(Config):
 
 class DockerConfig(ProductionConfig):
     MONGODB_URI = os.environ.get('MONGODB_URI') or 'mongodb://mongodb:27017/kayfmess'
+    MAIL_SERVER = os.environ.get('MAIL_SERVER') or 'postfix'
 
 
 config = {

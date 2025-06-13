@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ subject }} - КайфМесс</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #111;
+            color: #0F0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #222;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #0F0;
+        }
+        .container-urgent {
+            border: 1px solid #FF0000;
+        }
+        h1 {
+            color: #0F0;
+            text-shadow: 0 0 5px #0F0;
+        }
+        h1.urgent {
+            color: #FF0000;
+            text-shadow: 0 0 5px #FF0000;
+        }
+        .message {
+            background-color: #1a1a1a;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #0F0;
+        }
+        .message-urgent {
+            border-left: 4px solid #FF0000;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+        }
+        .timestamp {
+            font-style: italic;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container {% if urgent %}container-urgent{% endif %}">
+        <h1 {% if urgent %}class="urgent"{% endif %}>{{ subject }}</h1>
+        
+        {% if sender %}
+        <p>От пользователя: <strong>{{ sender }}</strong></p>
+        {% endif %}
+        
+        <div class="message {% if urgent %}message-urgent{% endif %}">
+            {{ message | safe }}
+        </div>
+        
+        <div class="footer">
+            <p>С уважением, команда КайфМесс</p>
+            <p class="timestamp">Отправлено в {{ timestamp }} часов ночи</p>
+        </div>
+    </div>
+</body>
+</html> 

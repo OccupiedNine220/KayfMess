@@ -1,0 +1,17 @@
+{{ subject }}
+{{ '=' * subject|length }}
+
+{% if sender %}
+От пользователя: {{ sender }}
+{% endif %}
+
+{{ message }}
+
+{% if urgent %}
+!!! ВАЖНОЕ СООБЩЕНИЕ !!!
+{% endif %}
+
+С уважением,
+Команда КайфМесс
+
+Отправлено в {{ timestamp }} часов ночи 
