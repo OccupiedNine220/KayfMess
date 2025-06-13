@@ -29,17 +29,17 @@
             {% if messages %}
                 {% for message in messages %}
                     <div class="message-container" 
-                         {% if message.energy_level and message.energy_level < 20 %}style="opacity: 0.7;"{% endif %}>
+                         {% if message.energy_level and message.energy_level < 20 %}style="opacity: 0.8;"{% endif %}>
                         <div class="d-flex justify-content-between">
                             <h5 class="text-info">{{ message.username }}</h5>
-                            <small class="text-muted">
+                            <small style="color: #aaddee !important;">
                                 {{ message.timestamp }}
                                 {% if message.written_at %}
                                 <span class="text-warning">[{{ message.written_at }}]</span>
                                 {% endif %}
                             </small>
                         </div>
-                        <p class="message-content">{{ message.content }}</p>
+                        <p class="message-content" style="color: #ffffff;">{{ message.content }}</p>
                         <div class="d-flex justify-content-between">
                             <div class="reactions">
                                 <a href="{{ url_for('rate_message', message_id=message._id, action='like') }}" class="btn btn-sm text-success">
@@ -71,9 +71,9 @@
                     </div>
                 {% endfor %}
             {% else %}
-                <div class="alert alert-info text-center">
+                <div class="alert alert-info text-center" style="color: #aaddff;">
                     <p>Пока нет сообщений. Будь первым, кто напишет что-то энергетичное!</p>
-                    <p><small>Или автор просто уснул, писав код в 3 часа ночи...</small></p>
+                    <p><small style="color: #aaddff !important;">Или автор просто уснул, писав код в 3 часа ночи...</small></p>
                 </div>
             {% endif %}
         </div>
@@ -107,7 +107,7 @@
                     </div>
                     
                     <p class="mb-1"><i class="fas fa-info-circle"></i> Энергетик заканчивается:</p>
-                    <ul class="text-muted">
+                    <ul style="color: #ccddcc;">
                         <li>Когда читаешь сообщения (-1%)</li>
                         <li>Когда пишешь сообщения (-5%)</li>
                         <li>Когда спишь вместо кодинга (-20%)</li>
@@ -120,7 +120,7 @@
                     </div>
                     
                     <div class="mt-3 text-center">
-                        <small class="text-muted">* Злоупотребление энергетиком может вызвать написание кода в 3 часа ночи</small>
+                        <small style="color: #aaddcc !important;">* Злоупотребление энергетиком может вызвать написание кода в 3 часа ночи</small>
                     </div>
                 </div>
             </div>

@@ -18,6 +18,26 @@
             min-height: 100vh;
             padding-top: 56px;
         }
+        /* Переопределяем мутированный текст, чтобы был виден на тёмном фоне */
+        .text-muted {
+            color: #99bbaa !important;
+        }
+        /* Улучшаем контраст для мелких текстов */
+        small {
+            color: #aaddcc !important;
+        }
+        /* Улучшение читаемости для списков */
+        ul.text-muted li {
+            color: #aaddcc !important;
+        }
+        /* Улучшение контраста для подвала карточек */
+        .card-footer {
+            color: #aaddcc !important;
+        }
+        /* Улучшение контраста для основного текста */
+        .card-body {
+            color: #eeffee;
+        }
         .navbar-brand {
             font-weight: bold;
             letter-spacing: 2px;
@@ -46,6 +66,9 @@
             margin-bottom: 15px;
             border-radius: 5px;
             transition: all 0.3s;
+        }
+        .message-content {
+            color: #ffffff;
         }
         .message-container:hover {
             transform: scale(1.01);
@@ -126,6 +149,16 @@
             50% { transform: rotate(0); }
             75% { transform: rotate(-1deg); }
             100% { transform: rotate(0); }
+        }
+        /* Переопределение стилей Alert для лучшего контраста */
+        .alert-info {
+            background-color: #1a3a5a;
+            color: #aaddff;
+            border-color: #2a5a8a;
+        }
+        /* Переопределение для текста в списках */
+        ul li {
+            color: #ccffcc;
         }
     </style>
     <!-- Google Fonts -->

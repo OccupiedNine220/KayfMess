@@ -15,7 +15,7 @@
             </div>
             <div class="card-body">
                 <div class="text-center mb-4">
-                    <p class="text-muted">Добро пожаловать обратно, товарищ! Твой энергетик остыл...</p>
+                    <p style="color: #aaddcc;">Добро пожаловать обратно, товарищ! Твой энергетик остыл...</p>
                 </div>
                 
                 <form action="{{ url_for('login') }}" method="POST">
@@ -26,7 +26,7 @@
                     <div class="mb-3">
                         <label for="password" class="form-label"><i class="fas fa-lock"></i> Пароль</label>
                         <input type="password" class="form-control" id="password" name="password" required>
-                        <small class="form-text text-muted">* Пароль должен содержать не менее 0% кофеина</small>
+                        <small style="color: #aaddcc !important;">* Пароль должен содержать не менее 0% кофеина</small>
                     </div>
                     <div class="text-center">
                         <button type="submit" class="btn btn-lg btn-energy">
@@ -36,7 +36,7 @@
                 </form>
                 
                 <div class="mt-4 text-center">
-                    <p>Нет аккаунта? <a href="{{ url_for('register') }}" class="text-info">Зарегистрируйся</a> и получи банку энергетика бесплатно!</p>
+                    <p style="color: #eeffee;">Нет аккаунта? <a href="{{ url_for('register') }}" class="text-info">Зарегистрируйся</a> и получи банку энергетика бесплатно!</p>
                     <p class="text-danger mt-3" id="time-display"><small>* Страница создана в 3 часа ночи. Текущее время: <span id="current-time"></span></small></p>
                 </div>
             </div>
@@ -48,7 +48,7 @@
         </div>
         
         <div class="text-center weird-message">
-            <p class="text-muted">
+            <p style="color: #aaddcc;">
                 <span class="d-inline-block" style="transform: rotate(-3deg);">Кажется, код перестаёт работать, когда я перестаю пить энергетик...</span>
             </p>
         </div>
