@@ -1,0 +1,68 @@
+version: '3'
+
+services:
+  # Приложение Flask
+  web:
+    build: .
+    container_name: kayfmess_web
+    restart: always
+    depends_on:
+      - mongodb
+    environment:
+      - FLASK_ENV=docker
+      - MONGODB_URI=mongodb://mongodb:27017/kayfmess
+      - SERVER_NAME=kayfmess.qndk.fun
+    volumes:
+      - ./static:/app/static
+      - ./logs:/app/logs
+    networks:
+      - kayfmess_network
+
+  # MongoDB
+  mongodb:
+    image: mongo:latest
+    container_name: kayfmess_mongodb
+    restart: always
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - kayfmess_network
+
+  # Nginx
+  nginx:
+    image: nginx:latest
+    container_name: kayfmess_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./static:/var/www/static
+      - ./nginx/letsencrypt:/etc/letsencrypt
+      - ./nginx/webroot:/var/www/html
+    depends_on:
+      - web
+    networks:
+      - kayfmess_network
+
+  # Certbot для Let's Encrypt
+  certbot:
+    image: certbot/certbot
+    container_name: kayfmess_certbot
+    volumes:
+      - ./nginx/letsencrypt:/etc/letsencrypt
+      - ./nginx/webroot:/var/www/html
+    depends_on:
+      - nginx
+    command: certonly --webroot --webroot-path=/var/www/html --email admin@example.com --agree-tos --no-eff-email -d kayfmess.qndk.fun
+    networks:
+      - kayfmess_network
+
+volumes:
+  mongodb_data:
+
+networks:
+  kayfmess_network:
+    driver: bridge 

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Вход на КайфМесс{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card bg-dark border-success mb-4">
+            <div class="card-header bg-black text-success text-center">
+                <h2 class="mb-0 pixel-font">
+                    <span style="color:#00FF00">Вход</span> 
+                    <span style="color:#FF00FF">в</span> 
+                    <span style="color:#FFFF00">КайфМесс</span>
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <p class="text-muted">Добро пожаловать обратно, товарищ! Твой энергетик остыл...</p>
+                </div>
+                
+                <form action="{{ url_for('login') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label"><i class="fas fa-user"></i> Имя пользователя</label>
+                        <input type="text" class="form-control" id="username" name="username" required autofocus>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label"><i class="fas fa-lock"></i> Пароль</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                        <small class="form-text text-muted">* Пароль должен содержать не менее 0% кофеина</small>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-lg btn-energy">
+                            <i class="fas fa-sign-in-alt"></i> Войти под энергетик
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="mt-4 text-center">
+                    <p>Нет аккаунта? <a href="{{ url_for('register') }}" class="text-info">Зарегистрируйся</a> и получи банку энергетика бесплатно!</p>
+                    <p class="text-danger mt-3" id="time-display"><small>* Страница создана в 3 часа ночи. Текущее время: <span id="current-time"></span></small></p>
+                </div>
+            </div>
+            <div class="card-footer bg-black text-center">
+                <div class="energy-drink-warning">
+                    <small class="text-warning">Злоупотребление энергетиками вызывает желание писать мессенджеры в 3 часа ночи</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center weird-message">
+            <p class="text-muted">
+                <span class="d-inline-block" style="transform: rotate(-3deg);">Кажется, код перестаёт работать, когда я перестаю пить энергетик...</span>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Добавляем немного приколов через JS на страницу входа
+    document.addEventListener('DOMContentLoaded', function() {
+        // Отображение текущего времени с приколом
+        function updateTime() {
+            const now = new Date();
+            let hour = now.getHours();
+            let minute = now.getMinutes();
+            let second = now.getSeconds();
+            
+            // "Глючное время", напоминающее что код пишется в 3 часа ночи
+            if (Math.random() < 0.1) { // 10% шанс показать 3:00 AM
+                hour = 3;
+                minute = Math.floor(Math.random() * 60);
+                second = Math.floor(Math.random() * 60);
+            }
+            
+            // Добавляем ведущие нули
+            hour = hour < 10 ? '0' + hour : hour;
+            minute = minute < 10 ? '0' + minute : minute;
+            second = second < 10 ? '0' + second : second;
+            
+            document.getElementById('current-time').textContent = `${hour}:${minute}:${second}`;
+            
+            // Если время действительно около 3 часов ночи
+            if (now.getHours() >= 1 && now.getHours() <= 5) {
+                document.getElementById('time-display').classList.add('text-danger');
+                document.getElementById('time-display').innerHTML = 
+                    '<small>* Ты действительно сидишь тут в <strong>' + hour + ':' + minute + 
+                    '</strong>?! Ты как разработчик этого сайта!</small>';
+            }
+        }
+        
+        // Обновляем время каждую секунду
+        updateTime();
+        setInterval(updateTime, 1000);
+        
+        // Анимация дрожащего курсора на полях ввода (как будто руки трясутся от энергетика)
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                if (Math.random() < 0.3) { // 30% шанс на эффект тряски
+                    input.classList.add('drunk');
+                    setTimeout(() => {
+                        input.classList.remove('drunk');
+                    }, 2000);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 

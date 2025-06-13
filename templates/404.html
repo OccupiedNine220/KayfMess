@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}404 - Страница не найдена{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto text-center">
+        <div class="card bg-dark border-danger mb-4">
+            <div class="card-header bg-black text-danger">
+                <h2 class="mb-0 pixel-font">Ошибка 404</h2>
+            </div>
+            <div class="card-body">
+                <div class="mt-3 mb-4">
+                    <h1 class="display-1 text-danger glitch">404</h1>
+                </div>
+                
+                <h3 class="mb-4 text-warning">{{ error_message }}</h3>
+                
+                <div class="alert alert-warning">
+                    <p class="mb-0">Похоже, разработчик забыл создать эту страницу. Видимо, энергетик кончился в самый неподходящий момент...</p>
+                </div>
+                
+                <div class="mt-4">
+                    <a href="{{ url_for('index') }}" class="btn btn-lg btn-energy">
+                        <i class="fas fa-home"></i> На главную
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer bg-black text-center">
+                <p class="text-muted mb-0">Попробуйте зайти позже, когда разработчик выпьет еще энергетика</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

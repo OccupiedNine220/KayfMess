@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Сообщения - Энергетический чат{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card bg-dark border-success mb-4">
+            <div class="card-header bg-black text-success">
+                <h3 class="mb-0 pixel-font"><i class="fas fa-comment-dots"></i> Написать сообщение</h3>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('send_message') }}" method="POST">
+                    <div class="mb-3">
+                        <textarea class="form-control" name="content" rows="3" placeholder="Напиши что-нибудь кайфовое... Кстати, это писалось в 3 часа ночи!"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-energy"><i class="fas fa-paper-plane"></i> Отправить под энергетиком</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="messages-container">
+            <h2 class="text-center mb-4 pixel-font">
+                <span style="color:#00FF00">Сообщения</span> 
+                <span style="color:#FF00FF">под</span> 
+                <span style="color:#FFFF00">энергетиком</span>
+            </h2>
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="message-container" 
+                         {% if message.energy_level and message.energy_level < 20 %}style="opacity: 0.7;"{% endif %}>
+                        <div class="d-flex justify-content-between">
+                            <h5 class="text-info">{{ message.username }}</h5>
+                            <small class="text-muted">
+                                {{ message.timestamp }}
+                                {% if message.written_at %}
+                                <span class="text-warning">[{{ message.written_at }}]</span>
+                                {% endif %}
+                            </small>
+                        </div>
+                        <p class="message-content">{{ message.content }}</p>
+                        <div class="d-flex justify-content-between">
+                            <div class="reactions">
+                                <a href="{{ url_for('rate_message', message_id=message._id, action='like') }}" class="btn btn-sm text-success">
+                                    <i class="fas fa-thumbs-up"></i> {{ message.likes or 0 }}
+                                </a>
+                                <a href="{{ url_for('rate_message', message_id=message._id, action='dislike') }}" class="btn btn-sm text-danger">
+                                    <i class="fas fa-thumbs-down"></i> {{ message.dislikes or 0 }}
+                                </a>
+                            </div>
+                            <div class="energy-stat">
+                                {% if message.energy_level %}
+                                    <span class="badge 
+                                        {% if message.energy_level > 70 %}bg-success
+                                        {% elif message.energy_level > 40 %}bg-warning
+                                        {% else %}bg-danger{% endif %}">
+                                        <i class="fas fa-bolt"></i> {{ message.energy_level }}%
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if loop.index == 3 and loop.length > 5 %}
+                            <div class="random-glitch text-danger">
+                                <!-- Случайный глюк в середине сообщений -->
+                                <div style="font-family: monospace; font-size: 0.8rem; color: #FF00FF; text-align: center;">
+                                    [GLITCh_00{{ random(100, 999) }}: НЕДОСТАТОЧНО ЭНЕРГЕТИКА В СИСТЕМЕ]
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info text-center">
+                    <p>Пока нет сообщений. Будь первым, кто напишет что-то энергетичное!</p>
+                    <p><small>Или автор просто уснул, писав код в 3 часа ночи...</small></p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Боковая панель со статистикой энергетика -->
+    <div class="col-lg-4 d-none d-lg-block">
+        <div class="card bg-dark border-warning mb-4 sticky-top" style="top: 70px;">
+            <div class="card-header bg-black text-warning">
+                <h4 class="mb-0"><i class="fas fa-bolt"></i> Статистика энергетика</h4>
+            </div>
+            <div class="card-body">
+                <div class="energy-stats">
+                    <p><i class="fas fa-tachometer-alt"></i> Твой уровень: 
+                        <span class="badge 
+                            {% if energy_level > 70 %}bg-success
+                            {% elif energy_level > 40 %}bg-warning
+                            {% else %}bg-danger{% endif %}">
+                            {{ energy_level }}%
+                        </span>
+                    </p>
+                    
+                    <div class="progress mb-3">
+                        <div class="progress-bar 
+                            {% if energy_level > 70 %}bg-success
+                            {% elif energy_level > 40 %}bg-warning
+                            {% else %}bg-danger{% endif %}" 
+                            role="progressbar" 
+                            style="width: {{ energy_level }}%">
+                        </div>
+                    </div>
+                    
+                    <p class="mb-1"><i class="fas fa-info-circle"></i> Энергетик заканчивается:</p>
+                    <ul class="text-muted">
+                        <li>Когда читаешь сообщения (-1%)</li>
+                        <li>Когда пишешь сообщения (-5%)</li>
+                        <li>Когда спишь вместо кодинга (-20%)</li>
+                    </ul>
+                    
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('energy_boost') }}" class="btn btn-lg btn-energy">
+                            <i class="fas fa-bolt"></i> Выпить еще энергетик
+                        </a>
+                    </div>
+                    
+                    <div class="mt-3 text-center">
+                        <small class="text-muted">* Злоупотребление энергетиком может вызвать написание кода в 3 часа ночи</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Добавляем немного пеперминта с задержкой загрузки
+    document.addEventListener('DOMContentLoaded', function() {
+        // Имитация медленного интернета в 3 часа ночи - иногда задерживаем загрузку событий
+        setTimeout(() => {
+            // Случайно глючим одно из сообщений
+            const messages = document.querySelectorAll('.message-container');
+            if (messages.length > 0) {
+                const randomIndex = Math.floor(Math.random() * messages.length);
+                if (Math.random() < 0.3) { // 30% шанс
+                    messages[randomIndex].classList.add('glitch');
+                    // Убираем глюк через 2 секунды
+                    setTimeout(() => {
+                        messages[randomIndex].classList.remove('glitch');
+                    }, 2000);
+                }
+            }
+            
+            // Иногда показываем "случайный баг"
+            if (Math.random() < 0.05) { // 5% шанс
+                const bugMessages = [
+                    "Упс, сервер решил вздремнуть!",
+                    "Кажется, закончился энергетик...",
+                    "Код самопроизвольно переписывает себя!",
+                    "Stack Overflow не отвечает в 3 часа ночи!"
+                ];
+                
+                const bugAlert = document.createElement('div');
+                bugAlert.className = 'alert alert-danger alert-dismissible fade show glitch';
+                bugAlert.innerHTML = 
+                    `<i class="fas fa-bug"></i> ${bugMessages[Math.floor(Math.random() * bugMessages.length)]}
+                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+                
+                document.querySelector('.flash-messages').appendChild(bugAlert);
+                
+                // Автоматически скрываем через 5 секунд
+                setTimeout(() => {
+                    bugAlert.classList.remove('show');
+                    setTimeout(() => {
+                        bugAlert.remove();
+                    }, 1000);
+                }, 5000);
+            }
+        }, Math.random() < 0.2 ? 1500 : 0); // 20% шанс на задержку
+    });
+</script>
+{% endblock %} 

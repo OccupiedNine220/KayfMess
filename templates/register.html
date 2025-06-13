@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Регистрация в КайфМесс{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card bg-dark border-primary mb-4">
+            <div class="card-header bg-black text-primary text-center">
+                <h2 class="mb-0 pixel-font">
+                    <span style="color:#00FF00">Регистрация</span> 
+                    <span style="color:#FF00FF">на</span> 
+                    <span style="color:#FFFF00">КайфМесс</span>
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <p class="text-muted">Приветствуем нового товарища! Энергетик уже готов для тебя!</p>
+                </div>
+                
+                <form action="{{ url_for('register') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label"><i class="fas fa-user-plus"></i> Придумай имя пользователя</label>
+                        <input type="text" class="form-control" id="username" name="username" required autofocus>
+                        <small class="form-text text-muted">* Желательно что-то энергетичное</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label"><i class="fas fa-lock"></i> Придумай пароль</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                        <small class="form-text text-muted">* Желательно не 123456, но в 3 часа ночи и это сойдет</small>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-lg btn-energy">
+                            <i class="fas fa-user-plus"></i> Зарегистрироваться и получить энергетик
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="mt-4 text-center">
+                    <p>Уже есть аккаунт? <a href="{{ url_for('login') }}" class="text-info">Войди</a> и продолжай пить энергетик!</p>
+                </div>
+            </div>
+            <div class="card-footer bg-black text-center">
+                <div id="night-warning" class="energy-drink-warning">
+                    <small class="text-warning"><span id="energy-warning">Регистрируясь, вы соглашаетесь писать код в 3 часа ночи</span></small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card bg-dark border-danger mb-4">
+            <div class="card-header bg-black text-danger">
+                <h4 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Предупреждение энергетика</h4>
+            </div>
+            <div class="card-body text-center">
+                <p>Чрезмерное употребление энергетических напитков приводит к:</p>
+                <ul class="list-unstyled text-muted">
+                    <li><i class="fas fa-check"></i> Написанию лучшего мессенджера в 3 часа ночи</li>
+                    <li><i class="fas fa-check"></i> Добавлению случайных багов "для интереса"</li>
+                    <li><i class="fas fa-check"></i> Вере в то, что твой код - лучший в мире</li>
+                    <li><i class="fas fa-check"></i> Психозу в 5 утра, когда производительность на 300%</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Добавляем немного приколов через JS на страницу регистрации
+    document.addEventListener('DOMContentLoaded', function() {
+        // Меняем предупреждения случайным образом
+        const warnings = [
+            "Регистрируясь, вы соглашаетесь писать код в 3 часа ночи",
+            "Внимание: энергетики вызывают привыкание к JavaScript",
+            "После 3-й банки энергетика все баги кажутся фичами",
+            "Этот сайт написан на 300% вашей обычной дозы кофеина",
+            "Побочный эффект: желание переписать весь код на Rust в 4 утра"
+        ];
+        
+        const warningElement = document.getElementById('energy-warning');
+        
+        // Меняем предупреждение каждые 5 секунд
+        setInterval(() => {
+            const newWarning = warnings[Math.floor(Math.random() * warnings.length)];
+            warningElement.textContent = newWarning;
+            
+            // Добавляем короткий глитч-эффект при смене
+            document.getElementById('night-warning').classList.add('glitch');
+            setTimeout(() => {
+                document.getElementById('night-warning').classList.remove('glitch');
+            }, 500);
+        }, 5000);
+        
+        // Имитация глюков при вводе
+        const usernameInput = document.getElementById('username');
+        usernameInput.addEventListener('input', function(e) {
+            // 5% шанс на "глюк" ввода
+            if (Math.random() < 0.05) {
+                const value = e.target.value;
+                const glitchChars = ['̸̡̭', '̭̩', '̛̬̦̩̤', '̼̝'];
+                const glitchChar = glitchChars[Math.floor(Math.random() * glitchChars.length)];
+                
+                // Добавляем "глючный" символ и через мгновение убираем
+                e.target.value = value + glitchChar;
+                setTimeout(() => {
+                    e.target.value = value;
+                }, 100);
+            }
+        });
+    });
+</script>
+{% endblock %} 

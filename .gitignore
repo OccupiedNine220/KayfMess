@@ -192,3 +192,38 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# Логи и базы данных
+*.log
+*.sqlite3
+.mongodb/
+data/
+mongodb_data/
+
+# Директории, создаваемые при развёртывании
+logs/
+nginx/letsencrypt/
+nginx/webroot/
+nginx/ssl/
+
+# Файл сессии Flask
+flask_session/
+
+# Кэш и временные файлы
+.pytest_cache/
+.cache
+.mypy_cache/
+
+# Файлы IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Директории системы
+.DS_Store
+Thumbs.db
+
+# Файлы настроек окружения
+.env.prod
+.env.local

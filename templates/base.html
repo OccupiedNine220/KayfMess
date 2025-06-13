@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KayfMess - {% block title %}Написан в 3 часа ночи под энергетиком{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            background-color: #111;
+            color: #00FF00;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            padding-top: 56px;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            letter-spacing: 2px;
+            font-size: 1.5rem;
+            text-shadow: 0 0 5px #00FF00;
+        }
+        .navbar {
+            background-color: #000 !important;
+            border-bottom: 2px solid #00FF00;
+        }
+        .loader {
+            text-align: center;
+            padding: 20px;
+            color: #FF00FF;
+            font-style: italic;
+        }
+        .energy-indicator {
+            height: 20px;
+            background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00);
+            border-radius: 10px;
+        }
+        .message-container {
+            background-color: #222;
+            border-left: 3px solid #00FF00;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .message-container:hover {
+            transform: scale(1.01);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+        }
+        .btn-energy {
+            background-color: #FF00FF;
+            color: white;
+            border: none;
+            transition: all 0.3s;
+        }
+        .btn-energy:hover {
+            background-color: #00FFFF;
+            transform: scale(1.05);
+        }
+        /* Случайные глитчи */
+        .glitch {
+            animation: glitch 0.5s infinite;
+        }
+        @keyframes glitch {
+            0% { transform: translate(0) }
+            20% { transform: translate(-5px, 5px) }
+            40% { transform: translate(-5px, -5px) }
+            60% { transform: translate(5px, 5px) }
+            80% { transform: translate(5px, -5px) }
+            100% { transform: translate(0) }
+        }
+        .form-control {
+            background-color: #333;
+            color: #00FF00;
+            border: 1px solid #00FF00;
+        }
+        .form-control:focus {
+            background-color: #444;
+            color: #00FF00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+        .flash-messages {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 300px;
+        }
+        /* Кнопка выпить энергетик */
+        .energy-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #FF00FF;
+            color: white;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+            transition: all 0.3s;
+        }
+        .energy-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.8);
+        }
+        /* Pixel Art Font */
+        .pixel-font {
+            font-family: 'Press Start 2P', cursive, sans-serif;
+            letter-spacing: 2px;
+        }
+        /* При случайных багах мы будем применять эти классы через JS */
+        .drunk {
+            animation: drunk 3s infinite;
+        }
+        @keyframes drunk {
+            0% { transform: rotate(0); }
+            25% { transform: rotate(1deg); }
+            50% { transform: rotate(0); }
+            75% { transform: rotate(-1deg); }
+            100% { transform: rotate(0); }
+        }
+    </style>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Навигационная панель -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand pixel-font" href="{{ url_for('index') }}">
+                <span class="text-success">Kayf</span><span class="text-danger">Mess</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('messages_page') }}"><i class="fas fa-comment-dots"></i> Сообщения</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('about') }}"><i class="fas fa-info-circle"></i> О нас</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    {% if session.username %}
+                    <li class="nav-item">
+                        <span class="nav-link">
+                            <i class="fas fa-bolt"></i> Энергетик: 
+                            <div class="progress" style="width: 100px; display: inline-block;">
+                                <div class="progress-bar 
+                                    {% if session.energy_level > 70 %}bg-success
+                                    {% elif session.energy_level > 40 %}bg-warning
+                                    {% else %}bg-danger{% endif %}" 
+                                    role="progressbar" 
+                                    style="width: {{ session.energy_level }}%">
+                                </div>
+                            </div>
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Выход ({{ session.username }})</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Вход</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Регистрация</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Загрузочное сообщение -->
+    {% if loading_message %}
+    <div class="loader">
+        {{ loading_message }}
+        <div class="spinner-border text-success spinner-border-sm" role="status">
+            <span class="visually-hidden">Загрузка...</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Флеш-сообщения -->
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Основное содержимое -->
+    <div class="container mt-4">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Кнопка энергетика -->
+    {% if session.username %}
+    <a href="{{ url_for('energy_boost') }}" class="energy-btn">
+        <i class="fas fa-bolt"></i>
+    </a>
+    {% endif %}
+
+    <!-- Bootstrap JS & Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        // Случайные глюки для элементов
+        document.addEventListener('DOMContentLoaded', function() {
+            // 10% шанс что страница будет "пьяная"
+            if (Math.random() < 0.1) {
+                document.body.classList.add('drunk');
+            }
+            
+            // Случайные глитчи элементов
+            const allElements = document.querySelectorAll('p, h1, h2, h3, h4, h5');
+            allElements.forEach(element => {
+                if (Math.random() < 0.05) { // 5% шанс на глитч
+                    element.classList.add('glitch');
+                    // Удаляем глитч через 2 секунды
+                    setTimeout(() => {
+                        element.classList.remove('glitch');
+                    }, 2000);
+                }
+            });
+        });
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html> 
