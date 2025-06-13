@@ -32,13 +32,22 @@ function check_deps() {
         return 1
     fi
     
-    if ! command -v docker-compose &> /dev/null; then
-        echo -e "${RED}[!] Docker Compose не установлен!${NC}"
-        return 1
+    # Проверяем новую версию Docker Compose (как плагин Docker)
+    if docker compose version &> /dev/null; then
+        echo -e "${GREEN}[+] Docker Compose (плагин) установлен!${NC}"
+        export DOCKER_COMPOSE="docker compose"
+        return 0
     fi
     
-    echo -e "${GREEN}[+] Все зависимости установлены!${NC}"
-    return 0
+    # Если новая версия не найдена, проверяем старую
+    if command -v docker-compose &> /dev/null; then
+        echo -e "${GREEN}[+] Docker Compose (standalone) установлен!${NC}"
+        export DOCKER_COMPOSE="docker-compose"
+        return 0
+    fi
+    
+    echo -e "${RED}[!] Docker Compose не установлен!${NC}"
+    return 1
 }
 
 function setup_dirs() {
@@ -53,7 +62,7 @@ function start_app() {
     current_time=$(date +"%H:%M")
     echo -e "${PURPLE}[!] Сейчас $current_time${NC}"
     
-    if docker-compose up -d; then
+    if $DOCKER_COMPOSE up -d; then
         echo -e "${GREEN}[+] KayfMess запущен успешно!${NC}"
         echo -e "${YELLOW}[i] Адрес: https://kayfmess.qndk.fun${NC}"
         return 0
@@ -68,7 +77,7 @@ function stop_app() {
     echo -e "${BLUE}[*] Останавливаем KayfMess...${NC}"
     echo -e "${YELLOW}[?] Рано пить энергетик?${NC}"
     
-    if docker-compose down; then
+    if $DOCKER_COMPOSE down; then
         echo -e "${GREEN}[+] KayfMess остановлен успешно!${NC}"
         return 0
     else
@@ -81,11 +90,11 @@ function setup_ssl() {
     echo -e "${BLUE}[*] Настраиваем SSL для kayfmess.qndk.fun...${NC}"
     echo -e "${YELLOW}[?] Let's Encrypt нужен энергетик, чтобы работать ночью...${NC}"
     
-    if docker-compose run --rm certbot; then
+    if $DOCKER_COMPOSE --profile certbot run --rm certbot; then
         echo -e "${GREEN}[+] SSL сертификаты получены успешно!${NC}"
         
         echo -e "${BLUE}[*] Перезапускаем Nginx для применения сертификатов...${NC}"
-        if docker-compose restart nginx; then
+        if $DOCKER_COMPOSE restart nginx; then
             echo -e "${GREEN}[+] Nginx перезапущен успешно!${NC}"
             return 0
         else
@@ -102,7 +111,7 @@ function show_logs() {
     echo -e "${BLUE}[*] Просмотр логов KayfMess...${NC}"
     echo -e "${YELLOW}[?] Что же происходило, пока я спал?${NC}"
     
-    docker-compose logs -f
+    $DOCKER_COMPOSE logs -f
 }
 
 function show_help() {
@@ -122,6 +131,9 @@ function show_help() {
 
 # Главный код
 print_banner
+
+# По умолчанию используем новый вариант Docker Compose
+export DOCKER_COMPOSE="docker compose"
 
 if ! check_deps; then
     exit 1

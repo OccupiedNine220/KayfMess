@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 
 services:
   # Приложение Flask
@@ -56,6 +56,8 @@ services:
       - ./nginx/webroot:/var/www/html
     depends_on:
       - nginx
+    profiles:
+      - certbot
     command: certonly --webroot --webroot-path=/var/www/html --email admin@example.com --agree-tos --no-eff-email -d kayfmess.qndk.fun
     networks:
       - kayfmess_network
