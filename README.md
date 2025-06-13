@@ -1,2 +1,2 @@
 # KayfMess
-написан в 3 часа ночи под энергетиками
+<img src="assets/banner.png" alt="Banner" style="width:100%;"/>
