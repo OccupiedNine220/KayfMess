@@ -29,3 +29,7 @@
 ### Лицензия
 Сам прожект распростроняется на [GNU GPLv3](LICENSE).  
 По настоящему энергетичный мессенджер
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=OccupiedNine220/KayfMess&type=Date)](https://www.star-history.com/#OccupiedNine220/KayfMess&Date)
