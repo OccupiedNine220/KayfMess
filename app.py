@@ -12,6 +12,14 @@ app = Flask(__name__)
 app.secret_key = "каЙфМесС_СеКрЕтНыЙ_КлЮч_B_3_4аСа_Н04и"
 app.jinja_env.globals.update(len=len, list=list)
 
+# Добавляем функцию random для использования в шаблонах
+def template_random(a, b=None):
+    if b is None:
+        return random.randint(0, a)
+    return random.randint(a, b)
+
+app.jinja_env.globals.update(random=template_random)
+
 # Подключение к MongoDB
 client = MongoClient('mongodb://localhost:27017/')
 db = client['kayfmess']
