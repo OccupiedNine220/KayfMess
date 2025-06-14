@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block title %}КайфМесс - Мессенджер, написанный в 3 часа ночи под энергетиком{% endblock %}
+
+{% block content %}
+<div class="landing-container">
+    <!-- Главный баннер -->
+    <div class="hero-section text-center mb-5">
+        <h1 class="display-3 pixel-font mb-4">
+            <span class="text-success">Kayf</span><span class="text-danger">Mess</span>
+        </h1>
+        <p class="lead mb-4">Мессенджер, написанный в 3 часа ночи под энергетиком</p>
+        <div class="d-flex justify-content-center gap-3 mb-5">
+            {% if session.username %}
+                <a href="{{ url_for('messages_page') }}" class="btn btn-lg btn-energy">
+                    <i class="fas fa-comments"></i> Перейти к сообщениям
+                </a>
+            {% else %}
+                <a href="{{ url_for('register') }}" class="btn btn-lg btn-energy">
+                    <i class="fas fa-user-plus"></i> Регистрация
+                </a>
+                <a href="{{ url_for('login') }}" class="btn btn-lg btn-outline-success">
+                    <i class="fas fa-sign-in-alt"></i> Вход
+                </a>
+            {% endif %}
+        </div>
+        <div class="energy-indicator mx-auto mb-5" style="max-width: 300px;"></div>
+    </div>
+
+    <!-- Особенности проекта -->
+    <div class="row mb-5">
+        <div class="col-md-4 mb-4">
+            <div class="card bg-dark border-success h-100">
+                <div class="card-header bg-black text-success">
+                    <h3 class="pixel-font"><i class="fas fa-bolt"></i> Энергетический</h3>
+                </div>
+                <div class="card-body">
+                    <p>Каждое действие требует энергии! Пополняйте свой запас энергетиком, чтобы продолжать общение.</p>
+                    <p>Чем больше энергии, тем больше возможностей.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card bg-dark border-warning h-100">
+                <div class="card-header bg-black text-warning">
+                    <h3 class="pixel-font"><i class="fas fa-code"></i> Открытый код</h3>
+                </div>
+                <div class="card-body">
+                    <p>КайфМесс - это проект с открытым исходным кодом, созданный с любовью и энергетиком.</p>
+                    <p>Вы можете внести свой вклад на <a href="https://github.com/OccupiedNine220/KayfMess" class="text-info" target="_blank">GitHub <i class="fab fa-github"></i></a></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card bg-dark border-info h-100">
+                <div class="card-header bg-black text-info">
+                    <h3 class="pixel-font"><i class="fas fa-users"></i> Сообщества</h3>
+                </div>
+                <div class="card-body">
+                    <p>Общайтесь в группах, отправляйте личные сообщения и делитесь энергетиком с друзьями!</p>
+                    <p>Каждая группа имеет свой собственный уровень энергии.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Открытый исходный код -->
+    <div class="open-source-section mb-5">
+        <div class="card bg-dark border-success">
+            <div class="card-header bg-black text-success">
+                <h2 class="pixel-font"><i class="fas fa-code-branch"></i> Открытый исходный код</h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-7">
+                        <p>КайфМесс - это проект с открытым исходным кодом, созданный для демонстрации возможностей Flask и MongoDB.</p>
+                        <p>Весь код доступен под лицензией GPL-3.0, что позволяет вам свободно использовать, модифицировать и распространять его при соблюдении условий лицензии.</p>
+                        <h4 class="mt-4">Технологии:</h4>
+                        <ul>
+                            <li>Backend: Python + Flask</li>
+                            <li>База данных: MongoDB</li>
+                            <li>Frontend: HTML5, CSS3, Bootstrap 5</li>
+                            <li>Дополнительно: Flask-Mail, энергетик и недосып</li>
+                        </ul>
+                        <div class="mt-4">
+                            <a href="https://github.com/OccupiedNine220/KayfMess" class="btn btn-outline-info" target="_blank">
+                                <i class="fab fa-github"></i> Посмотреть на GitHub
+                            </a>
+                            <a href="https://github.com/OccupiedNine220/KayfMess/issues" class="btn btn-outline-warning ms-2" target="_blank">
+                                <i class="fas fa-bug"></i> Сообщить о баге
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 mt-4 mt-lg-0">
+                        <div class="code-night">
+                            <pre>
+# Написано в 3 часа ночи под энергетиком
+@app.route("/энергетик")
+@login_required
+def energy_boost():
+    if random.random() < 0.7:  # 70% шанс
+        energy_boost = random.randint(30, 70)
+        users.update_one(
+            {"username": session["username"]},
+            {"$inc": {"energy_level": energy_boost}}
+        )
+        flash(f"+{energy_boost} к энергии!", "success")
+    else:
+        flash("Энергетик просрочен!", "danger")
+    return redirect(url_for("messages_page"))
+                            </pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Как внести свой вклад -->
+    <div class="contribute-section mb-5">
+        <div class="card bg-dark border-warning">
+            <div class="card-header bg-black text-warning">
+                <h2 class="pixel-font"><i class="fas fa-hands-helping"></i> Как внести свой вклад</h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>Для разработчиков:</h4>
+                        <ol>
+                            <li>Форкните репозиторий на GitHub</li>
+                            <li>Создайте свою ветку для фичи</li>
+                            <li>Напишите код (желательно после энергетика)</li>
+                            <li>Отправьте Pull Request</li>
+                        </ol>
+                        <p class="text-muted"><i class="fas fa-info-circle"></i> Примечание: код, написанный в 3 часа ночи, имеет приоритет при рассмотрении.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h4>Для всех остальных:</h4>
+                        <ul>
+                            <li>Сообщайте о багах (или о "фичах", если они появились в 3 часа ночи)</li>
+                            <li>Предлагайте новые идеи и улучшения</li>
+                            <li>Помогайте с документацией</li>
+                            <li>Делитесь проектом с друзьями</li>
+                            <li>Присылайте фотографии энергетиков для вдохновения</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика проекта -->
+    <div class="stats-section mb-5">
+        <div class="card bg-dark border-info">
+            <div class="card-header bg-black text-info">
+                <h2 class="pixel-font"><i class="fas fa-chart-bar"></i> Статистика проекта</h2>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3 mb-4">
+                        <div class="stat-card">
+                            <div class="display-4 mb-2 text-success">{{ stats.users_count }}</div>
+                            <div class="text-muted">Пользователей</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="stat-card">
+                            <div class="display-4 mb-2 text-warning">{{ stats.messages_count }}</div>
+                            <div class="text-muted">Сообщений</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="stat-card">
+                            <div class="display-4 mb-2 text-danger">{{ stats.night_messages }}</div>
+                            <div class="text-muted">Ночных сообщений</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="stat-card">
+                            <div class="display-4 mb-2 text-info">{{ stats.energy_consumed }}</div>
+                            <div class="text-muted">Банок энергетика</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Информация о лицензии -->
+    <div class="license-section mb-5">
+        <div class="card bg-dark border-success">
+            <div class="card-header bg-black text-success">
+                <h2 class="pixel-font"><i class="fas fa-balance-scale"></i> Лицензия GPL-3.0</h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-8">
+                        <p>КайфМесс распространяется под лицензией GNU General Public License версии 3 (GPL-3.0).</p>
+                        <p>Это означает, что вы можете:</p>
+                        <ul>
+                            <li><i class="fas fa-check text-success"></i> Свободно использовать код для любых целей</li>
+                            <li><i class="fas fa-check text-success"></i> Изучать и модифицировать код</li>
+                            <li><i class="fas fa-check text-success"></i> Распространять оригинальную или модифицированную версию</li>
+                        </ul>
+                        <p>При этом вы обязаны:</p>
+                        <ul>
+                            <li><i class="fas fa-exclamation-triangle text-warning"></i> Сохранять уведомление об авторских правах</li>
+                            <li><i class="fas fa-exclamation-triangle text-warning"></i> Распространять модифицированный код также под лицензией GPL-3.0</li>
+                            <li><i class="fas fa-exclamation-triangle text-warning"></i> Предоставлять доступ к исходному коду</li>
+                        </ul>
+                        <p class="mt-3">
+                            <a href="https://github.com/OccupiedNine220/KayfMess/blob/main/LICENSE" class="btn btn-outline-light" target="_blank">
+                                <i class="fas fa-external-link-alt"></i> Полный текст лицензии
+                            </a>
+                        </p>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="license-logo text-center">
+                            <img src="https://www.gnu.org/graphics/gplv3-with-text-136x68.png" alt="GPL-3.0 Logo" class="img-fluid mb-3">
+                            <p class="text-muted">По-настоящему энергетичный мессенджер</p>
+                            <div class="mt-3">
+                                <span class="badge bg-success">Свободное ПО</span>
+                                <span class="badge bg-primary">Открытый исходный код</span>
+                                <span class="badge bg-warning">Энергетический</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Отзывы пользователей -->
+    <div class="testimonials-section mb-5">
+        <h2 class="pixel-font text-center mb-4"><i class="fas fa-quote-left"></i> Отзывы пользователей</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card bg-dark border-success h-100">
+                    <div class="card-body">
+                        <p class="testimonial-text">"Никогда не думал, что мессенджер, написанный в 3 часа ночи, может быть таким функциональным! Особенно понравилась система энергетиков."</p>
+                        <div class="d-flex align-items-center mt-3">
+                            <div class="testimonial-avatar bg-success text-white">АК</div>
+                            <div class="ms-3">
+                                <h5 class="mb-0">Анонимный Кодер</h5>
+                                <small class="text-muted">Пользователь с 2023 года</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card bg-dark border-warning h-100">
+                    <div class="card-body">
+                        <p class="testimonial-text">"Я использую КайфМесс для общения с командой разработчиков. Глюки и случайные опечатки делают общение более живым и непредсказуемым!"</p>
+                        <div class="d-flex align-items-center mt-3">
+                            <div class="testimonial-avatar bg-warning text-dark">ПМ</div>
+                            <div class="ms-3">
+                                <h5 class="mb-0">Проджект-менеджер</h5>
+                                <small class="text-muted">Любитель энергетиков</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card bg-dark border-info h-100">
+                    <div class="card-body">
+                        <p class="testimonial-text">"Я форкнул проект и добавил интеграцию с кофемашиной. Теперь мой уровень энергии синхронизируется с реальными чашками кофе!"</p>
+                        <div class="d-flex align-items-center mt-3">
+                            <div class="testimonial-avatar bg-info text-white">ГХ</div>
+                            <div class="ms-3">
+                                <h5 class="mb-0">GitHub Контрибьютор</h5>
+                                <small class="text-muted">Не спит с 2021 года</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA секция -->
+    <div class="cta-section text-center mb-5">
+        <div class="card bg-dark border-danger">
+            <div class="card-body p-5">
+                <h2 class="pixel-font mb-4">Готовы присоединиться к кайфу?</h2>
+                <p class="lead mb-4">Регистрируйтесь прямо сейчас и получите бонусный энергетик!</p>
+                <div class="d-flex justify-content-center gap-3">
+                    {% if session.username %}
+                        <a href="{{ url_for('messages_page') }}" class="btn btn-lg btn-energy">
+                            <i class="fas fa-comments"></i> Перейти к сообщениям
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('register') }}" class="btn btn-lg btn-energy">
+                            <i class="fas fa-user-plus"></i> Регистрация
+                        </a>
+                        <a href="{{ url_for('login') }}" class="btn btn-lg btn-outline-success">
+                            <i class="fas fa-sign-in-alt"></i> Вход
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Добавляем "глюки" на лендинг
+    document.addEventListener('DOMContentLoaded', function() {
+        // Случайные глюки в тексте
+        setTimeout(() => {
+            if (Math.random() < 0.3) { // 30% шанс
+                const elements = document.querySelectorAll('.pixel-font');
+                if (elements.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * elements.length);
+                    elements[randomIndex].classList.add('glitch');
+                    setTimeout(() => {
+                        elements[randomIndex].classList.remove('glitch');
+                    }, 2000);
+                }
+            }
+            
+            // Иногда добавляем эффект "дёргания" страницы
+            if (Math.random() < 0.1) { // 10% шанс
+                document.body.classList.add('drunk');
+                setTimeout(() => {
+                    document.body.classList.remove('drunk');
+                }, 3000);
+            }
+        }, Math.random() < 0.2 ? 1500 : 500);
+    });
+</script>
+{% endblock %} 

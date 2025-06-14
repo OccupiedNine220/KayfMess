@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block title %}Группы - КайфМесс{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-3">
+        <!-- Мои группы -->
+        <div class="card bg-dark border-success mb-4">
+            <div class="card-header bg-black text-success">
+                <h4 class="mb-0 pixel-font"><i class="fas fa-users"></i> Мои группы</h4>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% if user_groups %}
+                        {% for group in user_groups %}
+                            <a href="{{ url_for('groups_page', group_id=group._id) }}" 
+                               class="list-group-item list-group-item-action bg-dark text-light
+                               {% if selected_group and selected_group._id|string == group._id|string %}active{% endif %}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span><i class="fas fa-hashtag"></i> {{ group.name }}</span>
+                                    <span class="badge 
+                                        {% if group.energy_level > 70 %}bg-success
+                                        {% elif group.energy_level > 40 %}bg-warning
+                                        {% else %}bg-danger{% endif %}">
+                                        <i class="fas fa-bolt"></i> {{ group.energy_level }}%
+                                    </span>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    {% else %}
+                        <div class="list-group-item bg-dark text-light">
+                            <i class="fas fa-info-circle"></i> Вы не состоите ни в одной группе
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer bg-black">
+                <button class="btn btn-outline-success w-100" data-bs-toggle="modal" data-bs-target="#newGroupModal">
+                    <i class="fas fa-plus"></i> Создать группу
+                </button>
+            </div>
+        </div>
+        
+        <!-- Доступные группы -->
+        <div class="card bg-dark border-info mb-4">
+            <div class="card-header bg-black text-info">
+                <h4 class="mb-0 pixel-font"><i class="fas fa-search"></i> Доступные группы</h4>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% if all_groups %}
+                        {% for group in all_groups %}
+                            <div class="list-group-item bg-dark text-light">
+                                <div class="d-flex justify-content-between">
+                                    <span><i class="fas fa-hashtag"></i> {{ group.name }}</span>
+                                    <a href="{{ url_for('join_group', group_id=group._id) }}" class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-sign-in-alt"></i> Вступить
+                                    </a>
+                                </div>
+                                <small class="text-muted">Создал: {{ group.created_by }}</small>
+                                {% if group.description %}
+                                    <p class="small mb-0 mt-1">{{ group.description }}</p>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="list-group-item bg-dark text-light">
+                            <i class="fas fa-info-circle"></i> Нет доступных групп
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        {% if selected_group %}
+            <div class="card bg-dark border-success mb-4">
+                <div class="card-header bg-black text-success">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0"><i class="fas fa-hashtag"></i> {{ selected_group.name }}</h4>
+                        {% if selected_group.created_by != session.username %}
+                            <a href="{{ url_for('leave_group', group_id=selected_group._id) }}" class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-sign-out-alt"></i> Покинуть
+                            </a>
+                        {% endif %}
+                    </div>
+                    {% if selected_group.description %}
+                        <p class="text-muted small mb-0 mt-1">{{ selected_group.description }}</p>
+                    {% endif %}
+                </div>
+                <div class="card-body chat-window">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="message-container 
+                                {% if message.system_message %}system-message{% elif message.username == session.username %}outgoing{% else %}incoming{% endif %}"
+                                {% if message.energy_level and message.energy_level < 20 %}style="opacity: 0.8;"{% endif %}>
+                                
+                                {% if message.system_message %}
+                                    <div class="system-message-content text-center">
+                                        <span class="badge bg-dark">{{ message.content }}</span>
+                                        <small class="text-muted d-block">{{ message.timestamp }}</small>
+                                    </div>
+                                {% else %}
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="{% if message.username == session.username %}text-success{% else %}text-info{% endif %}">
+                                            {{ message.username }}
+                                        </h6>
+                                        <small style="color: #aaddee !important;">
+                                            {{ message.timestamp }}
+                                            {% if message.written_at %}
+                                                <span class="text-warning">[{{ message.written_at }}]</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    <p class="message-content" style="color: #ffffff;">{{ message.content }}</p>
+                                    <div class="d-flex justify-content-between">
+                                        <div class="reactions">
+                                            <a href="#" class="btn btn-sm text-success like-btn">
+                                                <i class="fas fa-thumbs-up"></i> {{ message.likes or 0 }}
+                                            </a>
+                                            <a href="#" class="btn btn-sm text-danger dislike-btn">
+                                                <i class="fas fa-thumbs-down"></i> {{ message.dislikes or 0 }}
+                                            </a>
+                                        </div>
+                                        <div class="energy-stat">
+                                            {% if message.energy_level %}
+                                                <span class="badge 
+                                                    {% if message.energy_level > 70 %}bg-success
+                                                    {% elif message.energy_level > 40 %}bg-warning
+                                                    {% else %}bg-danger{% endif %}">
+                                                    <i class="fas fa-bolt"></i> {{ message.energy_level }}%
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            {% if loop.index == 5 and loop.length > 8 and random(1, 10) > 6 %}
+                                <div class="random-glitch text-danger">
+                                    <!-- Случайный глюк в середине сообщений группы -->
+                                    <div style="font-family: monospace; font-size: 0.8rem; color: #FF00FF; text-align: center;">
+                                        [GLITCh_00{{ random(100, 999) }}: СЛИШКОМ МНОГО ЛЮДЕЙ ДЛЯ ОДНОГО ЭНЕРГЕТИКА]
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="alert alert-info text-center" style="color: #aaddff;">
+                            <p>Эта группа пока пуста! Будьте первым, кто напишет в ней.</p>
+                            <p><small style="color: #aaddff !important;">Возможно, все участники спят в 3 часа ночи...</small></p>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-black">
+                    <form action="{{ url_for('send_group_message') }}" method="POST">
+                        <input type="hidden" name="group_id" value="{{ selected_group._id }}">
+                        <div class="input-group">
+                            <textarea class="form-control" name="content" rows="2" placeholder="Напишите сообщение для группы... Предупреждение: требуется много энергетика!"></textarea>
+                            <button type="submit" class="btn btn-energy">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <div class="card bg-dark border-info mb-4">
+                <div class="card-body text-center">
+                    <h4 class="text-info mb-4"><i class="fas fa-users"></i> Группы КайфМесс</h4>
+                    <p>Выберите группу из списка слева или создайте новую группу для общения.</p>
+                    <button class="btn btn-energy mt-3" data-bs-toggle="modal" data-bs-target="#newGroupModal">
+                        <i class="fas fa-plus"></i> Создать новую группу
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card bg-dark border-warning mb-4">
+                <div class="card-header bg-black text-warning">
+                    <h4 class="mb-0"><i class="fas fa-info-circle"></i> Про группы</h4>
+                </div>
+                <div class="card-body">
+                    <p>Группы в КайфМесс:</p>
+                    <ul>
+                        <li>Требуют еще больше энергии (-5% за сообщение)</li>
+                        <li>У групп тоже есть уровень энергии</li>
+                        <li>Созданы в 3 часа ночи в бреду</li>
+                        <li>Создатель не может покинуть группу (это ответственность!)</li>
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Боковая панель со статистикой энергетика -->
+    <div class="col-lg-3 d-none d-lg-block">
+        <div class="card bg-dark border-warning mb-4 sticky-top" style="top: 70px;">
+            <div class="card-header bg-black text-warning">
+                <h4 class="mb-0"><i class="fas fa-bolt"></i> Статистика энергетика</h4>
+            </div>
+            <div class="card-body">
+                <div class="energy-stats">
+                    <p><i class="fas fa-tachometer-alt"></i> Твой уровень: 
+                        <span class="badge 
+                            {% if energy_level > 70 %}bg-success
+                            {% elif energy_level > 40 %}bg-warning
+                            {% else %}bg-danger{% endif %}">
+                            {{ energy_level }}%
+                        </span>
+                    </p>
+                    
+                    <div class="progress mb-3">
+                        <div class="progress-bar 
+                            {% if energy_level > 70 %}bg-success
+                            {% elif energy_level > 40 %}bg-warning
+                            {% else %}bg-danger{% endif %}" 
+                            role="progressbar" 
+                            style="width: {{ energy_level }}%">
+                        </div>
+                    </div>
+                    
+                    <p class="mb-1"><i class="fas fa-info-circle"></i> Энергетик расходуется:</p>
+                    <ul style="color: #ccddcc;">
+                        <li>Личные сообщения (-3%)</li>
+                        <li>Группы (-5%)</li>
+                        <li>Создание группы (-10%)</li>
+                    </ul>
+                    
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('energy_boost') }}" class="btn btn-lg btn-energy">
+                            <i class="fas fa-bolt"></i> Выпить еще энергетик
+                        </a>
+                    </div>
+                    
+                    <div class="mt-3 text-center">
+                        <small style="color: #aaddcc !important;">* Не создавайте группы после второго энергетика</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для создания новой группы -->
+<div class="modal fade" id="newGroupModal" tabindex="-1" aria-labelledby="newGroupModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newGroupModalLabel"><i class="fas fa-plus"></i> Новая группа</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('create_group') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="groupName" class="form-label">Название группы</label>
+                        <input type="text" class="form-control bg-dark text-light" id="groupName" name="group_name" placeholder="Введите название группы">
+                    </div>
+                    <div class="mb-3">
+                        <label for="groupDescription" class="form-label">Описание (необязательно)</label>
+                        <textarea class="form-control bg-dark text-light" id="groupDescription" name="group_description" rows="3" placeholder="Краткое описание группы..."></textarea>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-energy">
+                            <i class="fas fa-plus-circle"></i> Создать группу
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Прокрутка чата вниз при загрузке
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatWindow = document.querySelector('.chat-window');
+        if (chatWindow) {
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+        
+        // Добавляем эффект "написано в 3 часа ночи"
+        setTimeout(() => {
+            // Случайная задержка при загрузке
+            if (Math.random() < 0.15) { // 15% шанс
+                const messages = document.querySelectorAll('.message-container:not(.system-message)');
+                if (messages.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * messages.length);
+                    messages[randomIndex].classList.add('glitch');
+                    
+                    // Убираем глюк через некоторое время
+                    setTimeout(() => {
+                        messages[randomIndex].classList.remove('glitch');
+                    }, 2000);
+                }
+            }
+            
+            // Иногда добавляем эффект "дёргания" страницы
+            if (Math.random() < 0.05) { // 5% шанс
+                document.body.classList.add('drunk');
+                setTimeout(() => {
+                    document.body.classList.remove('drunk');
+                }, 5000);
+            }
+        }, Math.random() < 0.2 ? 1500 : 500);
+    });
+</script>
+{% endblock %} 

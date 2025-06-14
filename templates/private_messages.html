@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Личные сообщения - КайфМесс{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-3">
+        <div class="card bg-dark border-info mb-4">
+            <div class="card-header bg-black text-info">
+                <h4 class="mb-0 pixel-font"><i class="fas fa-users"></i> Контакты</h4>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% if chat_partners %}
+                        {% for partner in chat_partners %}
+                            <a href="{{ url_for('private_messages_page', user=partner) }}" 
+                               class="list-group-item list-group-item-action bg-dark text-light
+                               {% if selected_user == partner %}active{% endif %}">
+                                <i class="fas fa-user"></i> {{ partner }}
+                            </a>
+                        {% endfor %}
+                    {% else %}
+                        <div class="list-group-item bg-dark text-light">
+                            <i class="fas fa-info-circle"></i> Нет активных переписок
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer bg-black">
+                <button class="btn btn-outline-info w-100" data-bs-toggle="modal" data-bs-target="#newChatModal">
+                    <i class="fas fa-plus"></i> Новый чат
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        {% if selected_user %}
+            <div class="card bg-dark border-success mb-4">
+                <div class="card-header bg-black text-success">
+                    <h4 class="mb-0"><i class="fas fa-comment-alt"></i> Чат с <span class="text-info">{{ selected_user }}</span></h4>
+                </div>
+                <div class="card-body chat-window">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="message-container {% if message.sender_username == session.username %}outgoing{% else %}incoming{% endif %}"
+                                 {% if message.energy_level and message.energy_level < 20 %}style="opacity: 0.8;"{% endif %}>
+                                <div class="d-flex justify-content-between">
+                                    <h6 class="{% if message.sender_username == session.username %}text-success{% else %}text-info{% endif %}">
+                                        {{ message.sender_username }}
+                                    </h6>
+                                    <small style="color: #aaddee !important;">
+                                        {{ message.timestamp }}
+                                        {% if message.written_at %}
+                                            <span class="text-warning">[{{ message.written_at }}]</span>
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <p class="message-content" style="color: #ffffff;">{{ message.content }}</p>
+                                <div class="text-end">
+                                    {% if message.energy_level %}
+                                        <span class="badge 
+                                            {% if message.energy_level > 70 %}bg-success
+                                            {% elif message.energy_level > 40 %}bg-warning
+                                            {% else %}bg-danger{% endif %}">
+                                            <i class="fas fa-bolt"></i> {{ message.energy_level }}%
+                                        </span>
+                                    {% endif %}
+                                    {% if not message.read and message.sender_username != session.username %}
+                                        <span class="badge bg-primary ms-1">Новое</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            {% if loop.index == 3 and loop.length > 5 and random(1, 10) > 7 %}
+                                <div class="random-glitch text-danger">
+                                    <!-- Случайный глюк в середине сообщений -->
+                                    <div style="font-family: monospace; font-size: 0.8rem; color: #FF00FF; text-align: center;">
+                                        [GLITCh_00{{ random(100, 999) }}: ПРИВАТНЫЕ СООБЩЕНИЯ ТРЕБУЮТ БОЛЬШЕ ЭНЕРГЕТИКА]
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="alert alert-info text-center" style="color: #aaddff;">
+                            <p>Начните переписку с {{ selected_user }}!</p>
+                            <p><small style="color: #aaddff !important;">Напишите что-нибудь энергетичное...</small></p>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-black">
+                    <form action="{{ url_for('send_private_message') }}" method="POST">
+                        <input type="hidden" name="recipient" value="{{ selected_user }}">
+                        <div class="input-group">
+                            <textarea class="form-control" name="content" rows="2" placeholder="Напишите сообщение... Используйте энергетик для лучшего эффекта"></textarea>
+                            <button type="submit" class="btn btn-energy">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <div class="card bg-dark border-info mb-4">
+                <div class="card-body text-center">
+                    <h4 class="text-info mb-4"><i class="fas fa-comments"></i> Личные сообщения</h4>
+                    <p>Выберите пользователя из списка или начните новый чат, чтобы начать общение.</p>
+                    <button class="btn btn-energy mt-3" data-bs-toggle="modal" data-bs-target="#newChatModal">
+                        <i class="fas fa-plus"></i> Новый чат
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card bg-dark border-warning mb-4">
+                <div class="card-header bg-black text-warning">
+                    <h4 class="mb-0"><i class="fas fa-info-circle"></i> Про личные сообщения</h4>
+                </div>
+                <div class="card-body">
+                    <p>Личные сообщения в КайфМесс:</p>
+                    <ul>
+                        <li>Требуют больше энергии (-3% за сообщение)</li>
+                        <li>Работают даже в 3 часа ночи</li>
+                        <li>Имеют случайные глюки от усталости</li>
+                        <li>Разработаны под энергетиком!</li>
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Боковая панель со статистикой энергетика -->
+    <div class="col-lg-3 d-none d-lg-block">
+        <div class="card bg-dark border-warning mb-4 sticky-top" style="top: 70px;">
+            <div class="card-header bg-black text-warning">
+                <h4 class="mb-0"><i class="fas fa-bolt"></i> Статистика энергетика</h4>
+            </div>
+            <div class="card-body">
+                <div class="energy-stats">
+                    <p><i class="fas fa-tachometer-alt"></i> Твой уровень: 
+                        <span class="badge 
+                            {% if energy_level > 70 %}bg-success
+                            {% elif energy_level > 40 %}bg-warning
+                            {% else %}bg-danger{% endif %}">
+                            {{ energy_level }}%
+                        </span>
+                    </p>
+                    
+                    <div class="progress mb-3">
+                        <div class="progress-bar 
+                            {% if energy_level > 70 %}bg-success
+                            {% elif energy_level > 40 %}bg-warning
+                            {% else %}bg-danger{% endif %}" 
+                            role="progressbar" 
+                            style="width: {{ energy_level }}%">
+                        </div>
+                    </div>
+                    
+                    <p class="mb-1"><i class="fas fa-info-circle"></i> Энергетик расходуется:</p>
+                    <ul style="color: #ccddcc;">
+                        <li>Личные сообщения (-3%)</li>
+                        <li>Группы (-5%)</li>
+                        <li>Общий чат (-1%)</li>
+                    </ul>
+                    
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('energy_boost') }}" class="btn btn-lg btn-energy">
+                            <i class="fas fa-bolt"></i> Выпить еще энергетик
+                        </a>
+                    </div>
+                    
+                    <div class="mt-3 text-center">
+                        <small style="color: #aaddcc !important;">* Не рекомендуется писать код в 3 часа ночи</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для создания нового чата -->
+<div class="modal fade" id="newChatModal" tabindex="-1" aria-labelledby="newChatModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newChatModalLabel"><i class="fas fa-plus"></i> Новый чат</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('private_messages_page') }}" method="GET">
+                    <div class="mb-3">
+                        <label for="userSelect" class="form-label">Выберите пользователя</label>
+                        <select class="form-select bg-dark text-light" id="userSelect" name="user">
+                            {% for user in all_users %}
+                                <option value="{{ user }}">{{ user }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-energy">
+                            <i class="fas fa-comment-dots"></i> Начать чат
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Прокрутка чата вниз при загрузке
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatWindow = document.querySelector('.chat-window');
+        if (chatWindow) {
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+        
+        // Случайные глюки интерфейса
+        setTimeout(() => {
+            if (Math.random() < 0.2) { // 20% шанс
+                const messages = document.querySelectorAll('.message-container');
+                if (messages.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * messages.length);
+                    messages[randomIndex].classList.add('glitch');
+                    setTimeout(() => {
+                        messages[randomIndex].classList.remove('glitch');
+                    }, 2000);
+                }
+            }
+        }, Math.random() < 0.3 ? 1500 : 500);
+    });
+</script>
+{% endblock %} 

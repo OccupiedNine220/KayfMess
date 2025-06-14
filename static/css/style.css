@@ -31,6 +31,44 @@
     border-left: 3px solid var(--energy-green);
     margin-bottom: 15px;
     transition: all 0.3s;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #222;
+}
+
+/* Стили для исходящих сообщений */
+.message-container.outgoing {
+    border-left: 3px solid var(--energy-pink);
+    background-color: #1a1a2a;
+    margin-left: 20px;
+}
+
+/* Стили для входящих сообщений */
+.message-container.incoming {
+    border-left: 3px solid var(--energy-blue);
+    background-color: #1a2a1a;
+    margin-right: 20px;
+}
+
+/* Стили для системных сообщений */
+.message-container.system-message {
+    border: none;
+    background-color: transparent;
+    margin: 5px 0;
+    padding: 5px;
+    opacity: 0.8;
+}
+
+.system-message-content {
+    padding: 5px;
+    color: #aaa;
+}
+
+/* Окно чата */
+.chat-window {
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 10px;
 }
 
 .message-container:hover {
@@ -185,6 +223,8 @@
     padding: 10px;
     line-height: 1.4;
     position: relative;
+    border-radius: 5px;
+    overflow: auto;
 }
 
 .code-night:before {
@@ -236,4 +276,62 @@
 ::-webkit-scrollbar-thumb {
     background-image: linear-gradient(var(--energy-green), var(--energy-blue), var(--energy-pink));
     border-radius: 5px;
+}
+
+/* Стили для лендинга */
+.landing-container {
+    padding: 20px 0;
+}
+
+.hero-section {
+    padding: 40px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle, rgba(0,255,0,0.05) 0%, rgba(0,0,0,0) 70%);
+    z-index: -1;
+}
+
+.stat-card {
+    padding: 20px;
+    border-radius: 10px;
+    background-color: #1a1a1a;
+    transition: all 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 255, 0, 0.1);
+}
+
+.testimonial-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.testimonial-text {
+    font-style: italic;
+    position: relative;
+}
+
+.testimonial-text:before {
+    content: """;
+    font-size: 3rem;
+    position: absolute;
+    left: -10px;
+    top: -20px;
+    opacity: 0.2;
 } 

@@ -73,7 +73,22 @@ def login_required(f):
 @app.route("/")
 def index():
     random_delay()  # Имитация бага
-    return redirect(url_for("messages_page"))
+    return redirect(url_for("landing_page"))
+
+@app.route("/лендинг")
+def landing_page():
+    """Главная страница с информацией о проекте"""
+    # Собираем статистику для отображения
+    stats = {
+        "users_count": users.count_documents({}),
+        "messages_count": messages.count_documents({}),
+        "night_messages": messages.count_documents({"written_at": "3 часа ночи"}),
+        "energy_consumed": random.randint(100, 9999)
+    }
+    
+    return render_template("landing.html", 
+                          stats=stats,
+                          loading_message=random.choice(FUNNY_LOADING_MESSAGES))
 
 @app.route("/регистрация", methods=["GET", "POST"])
 def register():
