@@ -26,6 +26,9 @@ db = client['kayfmess']
 users = db['users']
 messages = db['messages']
 energy_logs = db['energy_logs']  # Логи "энергетика"
+private_messages = db['private_messages']  # Приватные сообщения
+groups = db['groups']  # Группы
+group_messages = db['group_messages']  # Сообщения в группах
 
 # Инициализация Flask-Mail
 mail = Mail(app)
@@ -412,6 +415,361 @@ def send_notification_email(to, subject, template, **kwargs):
     except Exception as e:
         print(f"Ошибка отправки email: {str(e)}")
         return False
+
+@app.route("/личные")
+@login_required
+def private_messages_page():
+    """Страница для отображения личных сообщений"""
+    # Получаем список пользователей, с которыми есть переписка
+    chat_partners = private_messages.distinct(
+        "sender_username", 
+        {
+            "$or": [
+                {"sender_username": {"$ne": session["username"]}, "recipient_username": session["username"]},
+                {"sender_username": session["username"], "recipient_username": {"$ne": session["username"]}}
+            ]
+        }
+    ) + private_messages.distinct(
+        "recipient_username", 
+        {
+            "$or": [
+                {"sender_username": {"$ne": session["username"]}, "recipient_username": session["username"]},
+                {"sender_username": session["username"], "recipient_username": {"$ne": session["username"]}}
+            ]
+        }
+    )
+    
+    # Убираем дубликаты и себя из списка
+    chat_partners = list(set(partner for partner in chat_partners if partner != session["username"]))
+    
+    # Получаем список всех пользователей для создания новой переписки
+    all_users = list(users.find({}, {"username": 1}))
+    all_usernames = [user["username"] for user in all_users if user["username"] != session["username"]]
+    
+    selected_user = request.args.get("user")
+    
+    # Если выбран пользователь, получаем переписку с ним
+    chat_messages = []
+    if selected_user:
+        chat_messages = list(private_messages.find({
+            "$or": [
+                {"sender_username": session["username"], "recipient_username": selected_user},
+                {"sender_username": selected_user, "recipient_username": session["username"]}
+            ]
+        }).sort("timestamp", 1))  # Сортируем по возрастанию времени
+    
+    # Понижаем энергию пользователя
+    users.update_one(
+        {"username": session["username"]}, 
+        {"$inc": {"energy_level": -1}}
+    )
+    
+    # Получаем обновленную энергию
+    user = users.find_one({"username": session["username"]})
+    session["energy_level"] = user.get("energy_level", 0)
+    
+    return render_template(
+        "private_messages.html",
+        chat_partners=chat_partners,
+        all_users=all_usernames,
+        selected_user=selected_user,
+        messages=chat_messages,
+        energy_level=session.get("energy_level", 0),
+        loading_message=random.choice(FUNNY_LOADING_MESSAGES)
+    )
+
+@app.route("/отправить_лс", methods=["POST"])
+@login_required
+def send_private_message():
+    """Маршрут для отправки личных сообщений"""
+    recipient = request.form.get("recipient")
+    content = request.form.get("content")
+    
+    if recipient and content and content.strip():
+        # Проверяем, существует ли такой пользователь
+        recipient_exists = users.find_one({"username": recipient})
+        
+        if recipient_exists:
+            # Иногда "глючим" текст (как будто в 3 часа ночи опечатки)
+            if random.random() < 0.15:  # 15% шанс на "опечатку"
+                typos = {"а": "о", "о": "а", "е": "и", "и": "е", "т": "д", "с": "з"}
+                for char, replacement in typos.items():
+                    if char in content and random.random() < 0.3:
+                        content = content.replace(char, replacement, 1)
+            
+            # Добавление нового личного сообщения в MongoDB
+            message = {
+                "sender_username": session["username"],
+                "recipient_username": recipient,
+                "content": content,
+                "timestamp": datetime.now(),
+                "read": False,
+                "written_at": "3 часа ночи" if 1 <= datetime.now().hour <= 5 else f"{datetime.now().hour} часов дня/ночи",
+                "energy_level": session.get("energy_level", 100)
+            }
+            
+            private_messages.insert_one(message)
+            
+            # Понижаем уровень энергии
+            users.update_one(
+                {"username": session["username"]},
+                {"$inc": {"energy_level": -3}}  # ЛС требуют больше энергии
+            )
+            
+            # Если у пользователя мало энергии, добавим энергетик
+            if session.get("energy_level", 0) < 30:
+                users.update_one(
+                    {"username": session["username"]},
+                    {"$inc": {"energy_level": random.randint(20, 50)}}
+                )
+                flash("Вы выпили еще энергетика! Теперь можно писать дальше!", "success")
+            else:
+                flash(f"Личное сообщение отправлено для {recipient}!", "success")
+        else:
+            flash(f"Пользователь {recipient} не найден.", "danger")
+    else:
+        flash("Пустые сообщения запрещены указом партии! Пейте больше энергетиков!", "danger")
+    
+    return redirect(url_for("private_messages_page", user=recipient))
+
+@app.route("/группы")
+@login_required
+def groups_page():
+    """Страница для отображения групп"""
+    # Получаем список групп, в которых состоит пользователь
+    user_groups = list(groups.find({"members": session["username"]}))
+    
+    # Получаем список всех групп для возможного вступления
+    all_groups = list(groups.find({"members": {"$ne": session["username"]}}))
+    
+    selected_group = request.args.get("group_id")
+    
+    # Если выбрана группа, получаем сообщения из неё
+    group_messages_list = []
+    current_group = None
+    if selected_group:
+        try:
+            from bson.objectid import ObjectId
+            group_id = ObjectId(selected_group)
+            
+            current_group = groups.find_one({"_id": group_id})
+            
+            if current_group and session["username"] in current_group["members"]:
+                group_messages_list = list(group_messages.find({
+                    "group_id": group_id
+                }).sort("timestamp", 1))
+        except Exception as e:
+            flash(f"Ошибка при получении сообщений группы: {str(e)}", "danger")
+    
+    # Понижаем энергию пользователя
+    users.update_one(
+        {"username": session["username"]}, 
+        {"$inc": {"energy_level": -1}}
+    )
+    
+    # Получаем обновленную энергию
+    user = users.find_one({"username": session["username"]})
+    session["energy_level"] = user.get("energy_level", 0)
+    
+    return render_template(
+        "groups.html",
+        user_groups=user_groups,
+        all_groups=all_groups,
+        selected_group=current_group,
+        messages=group_messages_list,
+        energy_level=session.get("energy_level", 0),
+        loading_message=random.choice(FUNNY_LOADING_MESSAGES)
+    )
+
+@app.route("/создать_группу", methods=["POST"])
+@login_required
+def create_group():
+    """Маршрут для создания новой группы"""
+    group_name = request.form.get("group_name")
+    group_description = request.form.get("group_description", "")
+    
+    if group_name and group_name.strip():
+        # Проверяем, существует ли группа с таким именем
+        existing_group = groups.find_one({"name": group_name})
+        
+        if existing_group:
+            flash("Группа с таким названием уже существует!", "danger")
+        else:
+            # Создаём новую группу
+            group = {
+                "name": group_name,
+                "description": group_description,
+                "created_by": session["username"],
+                "created_at": datetime.now(),
+                "members": [session["username"]],  # Создатель автоматически становится участником
+                "energy_level": random.randint(50, 100)
+            }
+            
+            result = groups.insert_one(group)
+            
+            # Понижаем уровень энергии (создание группы требует много сил)
+            users.update_one(
+                {"username": session["username"]},
+                {"$inc": {"energy_level": -10}}
+            )
+            
+            flash(f"Группа '{group_name}' успешно создана!", "success")
+            return redirect(url_for("groups_page", group_id=result.inserted_id))
+    else:
+        flash("Необходимо указать название группы!", "danger")
+    
+    return redirect(url_for("groups_page"))
+
+@app.route("/вступить_в_группу/<group_id>")
+@login_required
+def join_group(group_id):
+    """Маршрут для вступления в группу"""
+    try:
+        from bson.objectid import ObjectId
+        
+        # Проверяем, существует ли группа
+        group = groups.find_one({"_id": ObjectId(group_id)})
+        
+        if group:
+            # Добавляем пользователя в группу, если он еще не состоит в ней
+            if session["username"] not in group["members"]:
+                groups.update_one(
+                    {"_id": ObjectId(group_id)},
+                    {"$push": {"members": session["username"]}}
+                )
+                
+                # Создаем системное сообщение о входе в группу
+                system_message = {
+                    "group_id": ObjectId(group_id),
+                    "username": "Система",
+                    "content": f"Пользователь {session['username']} вступил в группу под энергетиком!",
+                    "timestamp": datetime.now(),
+                    "system_message": True,
+                    "written_at": "3 часа ночи" if 1 <= datetime.now().hour <= 5 else f"{datetime.now().hour} часов дня/ночи",
+                    "energy_level": 100  # У системы всегда много энергии
+                }
+                
+                group_messages.insert_one(system_message)
+                
+                flash(f"Вы успешно вступили в группу '{group['name']}'!", "success")
+            else:
+                flash("Вы уже состоите в этой группе!", "info")
+        else:
+            flash("Группа не найдена!", "danger")
+    except Exception as e:
+        flash(f"Произошла ошибка: {str(e)}", "danger")
+    
+    return redirect(url_for("groups_page"))
+
+@app.route("/покинуть_группу/<group_id>")
+@login_required
+def leave_group(group_id):
+    """Маршрут для выхода из группы"""
+    try:
+        from bson.objectid import ObjectId
+        
+        # Проверяем, существует ли группа
+        group = groups.find_one({"_id": ObjectId(group_id)})
+        
+        if group:
+            # Проверяем, является ли пользователь создателем группы
+            if group["created_by"] == session["username"]:
+                flash("Создатель не может покинуть группу! Это ваша ответственность до 3 часов ночи!", "warning")
+            else:
+                # Удаляем пользователя из группы
+                groups.update_one(
+                    {"_id": ObjectId(group_id)},
+                    {"$pull": {"members": session["username"]}}
+                )
+                
+                # Создаем системное сообщение о выходе из группы
+                system_message = {
+                    "group_id": ObjectId(group_id),
+                    "username": "Система",
+                    "content": f"Пользователь {session['username']} покинул группу. Наверное, энергетик закончился!",
+                    "timestamp": datetime.now(),
+                    "system_message": True,
+                    "written_at": "3 часа ночи" if 1 <= datetime.now().hour <= 5 else f"{datetime.now().hour} часов дня/ночи",
+                    "energy_level": 100
+                }
+                
+                group_messages.insert_one(system_message)
+                
+                flash(f"Вы покинули группу '{group['name']}'!", "success")
+        else:
+            flash("Группа не найдена!", "danger")
+    except Exception as e:
+        flash(f"Произошла ошибка: {str(e)}", "danger")
+    
+    return redirect(url_for("groups_page"))
+
+@app.route("/отправить_в_группу", methods=["POST"])
+@login_required
+def send_group_message():
+    """Маршрут для отправки сообщения в группу"""
+    try:
+        from bson.objectid import ObjectId
+        
+        group_id = request.form.get("group_id")
+        content = request.form.get("content")
+        
+        if not group_id or not content or not content.strip():
+            flash("Пустые сообщения запрещены указом партии! Пейте больше энергетиков!", "danger")
+            return redirect(url_for("groups_page"))
+        
+        # Проверяем, существует ли группа и является ли пользователь её участником
+        group = groups.find_one({"_id": ObjectId(group_id)})
+        
+        if group and session["username"] in group["members"]:
+            # Иногда "глючим" текст (как будто в 3 часа ночи опечатки)
+            if random.random() < 0.15:  # 15% шанс на "опечатку"
+                typos = {"а": "о", "о": "а", "е": "и", "и": "е", "т": "д", "с": "з"}
+                for char, replacement in typos.items():
+                    if char in content and random.random() < 0.3:
+                        content = content.replace(char, replacement, 1)
+            
+            # Добавление нового сообщения в MongoDB
+            message = {
+                "group_id": ObjectId(group_id),
+                "username": session["username"],
+                "content": content,
+                "timestamp": datetime.now(),
+                "system_message": False,
+                "likes": 0,
+                "dislikes": 0,
+                "written_at": "3 часа ночи" if 1 <= datetime.now().hour <= 5 else f"{datetime.now().hour} часов дня/ночи",
+                "energy_level": session.get("energy_level", 100)
+            }
+            
+            group_messages.insert_one(message)
+            
+            # Понижаем уровень энергии
+            users.update_one(
+                {"username": session["username"]},
+                {"$inc": {"energy_level": -5}}  # Сообщения в группе требуют еще больше энергии
+            )
+            
+            # Если у пользователя мало энергии, добавим энергетик
+            if session.get("energy_level", 0) < 30:
+                users.update_one(
+                    {"username": session["username"]},
+                    {"$inc": {"energy_level": random.randint(20, 50)}}
+                )
+                flash("Вы выпили еще энергетика! Теперь можно писать дальше!", "success")
+            else:
+                flash(f"Сообщение отправлено в группу '{group['name']}'!", "success")
+            
+            # Снижаем энергию группы (группы тоже устают)
+            groups.update_one(
+                {"_id": ObjectId(group_id)},
+                {"$inc": {"energy_level": -1}}
+            )
+        else:
+            flash("Группа не найдена или вы не являетесь её участником!", "danger")
+    except Exception as e:
+        flash(f"Произошла ошибка: {str(e)}", "danger")
+    
+    return redirect(url_for("groups_page", group_id=group_id))
 
 if __name__ == "__main__":
     app.run(debug=True) 
